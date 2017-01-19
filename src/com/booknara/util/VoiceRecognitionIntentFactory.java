@@ -51,6 +51,7 @@ public class VoiceRecognitionIntentFactory {
         intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, MAX_RESULTS);
         intent.putExtra(RecognizerIntent.EXTRA_WEB_SEARCH_ONLY, false);
         intent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "ro");
         return intent;
     }
 
