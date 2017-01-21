@@ -30,7 +30,8 @@ public class VoiceRecognitionIntentFactory {
 		intent.putExtra(RecognizerIntent.EXTRA_PROMPT, prompt);
 		return intent;
     }
-    
+
+    //foloseste Internetul pentru recunoastere vocala
     public static Intent getWebSearchRecognizeIntent()
     {
         Intent intent = new Intent(RecognizerIntent.ACTION_WEB_SEARCH);
@@ -51,7 +52,7 @@ public class VoiceRecognitionIntentFactory {
         intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, MAX_RESULTS);
         intent.putExtra(RecognizerIntent.EXTRA_WEB_SEARCH_ONLY, false);
         intent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "ro");
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "ro"); //setare pentru limba romana
         return intent;
     }
 
