@@ -7,7 +7,6 @@ import java.util.List;
 import com.booknara.util.VoiceRecognitionIntentFactory;
 
 import android.app.Activity;
-import android.content.ContentResolver;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
@@ -18,7 +17,7 @@ import android.provider.ContactsContract;
 import android.speech.RecognizerIntent;
 import android.view.Menu;
 import android.view.View;
-import android.view.View.OnClickListener;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
@@ -44,7 +43,7 @@ public class MainActivity extends Activity {
 		   mMicButton.setEnabled(false);
 		   Toast.makeText(getApplicationContext(), "Nu este suportat", Toast.LENGTH_LONG).show(); // toast = mesaj de asistenta in caz de eroare
 		}
-		mMicButton.setOnClickListener(new OnClickListener() {
+		mMicButton.setOnClickListener(new View.OnClickListener() {
 		   @Override
 		   public void onClick(View v) {
 			   runVoiceRecognition();
@@ -61,32 +60,58 @@ public class MainActivity extends Activity {
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 
-		List<String> contacts = getContactList(); // lista de contacte
+		List<Contact> contacts = getContactList();
+
+        ArrayList<String> names = new ArrayList<>();
+        for (Contact contact : contacts) {
+            names.add(contact.getName());
+        }
+
 		if (requestCode == REQUEST_CODE && resultCode == RESULT_OK) {
-			ArrayList<String> matches = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS); // afiseaza pe display ce gaseste
-            // face intersectia datelor // corelatie intre ce se rosteste si ce gaseste
-            matches.retainAll(contacts);
-			mResultList.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, matches)); //pune in lista elementele din matches
-		}
+			ArrayList<String> matches = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+            // intersectie
+            matches.retainAll(names);
+
+            if (matches.size() == 0) {
+                matches.add("Nu s-a gasit contactul");
+            }
+			mResultList.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, matches));
+            mResultList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    for (Contact contact : contacts) {
+                        if (contact.getName().equals(matches.get(0))) {
+                            callNumber(contact.getNumber());
+                        }
+                    }
+                }
+            });
+        }
 		
 		super.onActivityResult(requestCode, resultCode, data);
 	}
 
 
     // returneaza lista de contacte
-	public List<String> getContactList() {
+	public List<Contact> getContactList() {
 
-        List<String> names = new LinkedList<>(); // initializeaza o lista goale
-        Cursor phones = getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null,null,null, null); // cauta in Contacte numele si nr de telefon
+        List<Contact> names = new LinkedList<>();
+        Cursor phones = getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null,null,null, null);
         while (phones.moveToNext())
         {
-            String name=phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)); // organizeaza in baza de date si seleccteaza coloana de care avem nevoie
-            names.add(name.toLowerCase()); //adauga numele gasite in lista si transforma toate literele mari in litere mici
+            String name = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
+            String number = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+            names.add(new Contact(name.toLowerCase(), number));
         }
         phones.close();
 
         return names; //returneaza numele
 	}
+
+    public void callNumber(String number) {
+        Intent intent = new Intent(Intent.ACTION_CALL, Uri.parse("tel:" + number));
+        startActivity(intent);
+    }
 	
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
